@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  server:
+    build: .
+    networks:
+      - backend
+    ports:
+      - "8080:8080"
+    environment:
+      - MYSQL_USER=bbforum
+      - MYSQL_PASSWORD=bbforum
+      - MYSQL_HOST=mysql
+      - MYSQL_DATABASE=bbforum
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  mysql:
+    image: mysql:5.7
+    networks:
+      - backend
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: bbforum
+      MYSQL_USER: bbforum
+      MYSQL_PASSWORD: bbforum
+    ports:
+      - "3306:3306"
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/schema.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "bbforum", "--password=bbforum"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+networks:
+  backend:
+    name: "bbforum-network"
